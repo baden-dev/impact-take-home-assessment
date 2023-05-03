@@ -9,7 +9,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,6 +29,7 @@ class NumberSummarizerTests {
             Collection<Integer> expectedOutput =
                     new ArrayList<>(Arrays.asList(5,4,3,2));
             Collection<Integer> actualOutput = numberSummarizer.collect(input);
+
             assertArrayEquals(expectedOutput.toArray(), actualOutput.toArray());
         }
         @Test
@@ -38,6 +38,7 @@ class NumberSummarizerTests {
             Collection<Integer> expectedOutput =
                     new ArrayList<>(Arrays.asList(1,3,6,7,8,12,13,14,15,21,22,23,24,31));
             Collection<Integer> actualOutput = numberSummarizer.collect(input);
+
             assertArrayEquals(expectedOutput.toArray(), actualOutput.toArray());
         }
 
@@ -65,7 +66,15 @@ class NumberSummarizerTests {
         @ValueSource(strings = {"3", "3, 3, 3"})
         void collect_inputSingleValue_returnCollectionSizeOne(String input) {
             Collection<Integer> actualOutput =  numberSummarizer.collect(input);
+
             assertEquals(1, actualOutput.size());
+        }
+
+        @Test
+        void collect_inputNull_throwException() {
+            assertThrows(NullPointerException.class,
+                    () -> numberSummarizer.collect(null),
+                    "This should have thrown a NullPointerException");
         }
 
         @Test
@@ -80,6 +89,89 @@ class NumberSummarizerTests {
             assertThrows(NumberFormatException.class,
                     () -> numberSummarizer.collect("1,b,6,7,8,12,13"),
                     "This should have thrown a NumberFormatException");
+        }
+    }
+
+    @Nested
+    class SummarizeCollectionTests{
+
+        @Test
+        void summarizeCollection_inputContainsMultipleConsecutiveRanges(){
+            String expectedOutput = "1, 3, 6-8, 12-15, 21-24, 31";
+            Collection<Integer> input =
+                    new ArrayList<>(Arrays.asList(1,3,6,7,8,12,13,14,15,21,22,23,24,31));
+            String actualOutput = numberSummarizer.summarizeCollection(input);
+
+            assertEquals(expectedOutput, actualOutput);
+        }
+
+        @Test
+        void summarizeCollection_inputContainsSingleRange(){
+            String expectedOutput = "1, 3-7, 9, 11";
+            Collection<Integer> input =
+                    new ArrayList<>(Arrays.asList(1,3,4,5,6,7,9,11));
+            String actualOutput = numberSummarizer.summarizeCollection(input);
+
+            assertEquals(expectedOutput, actualOutput);
+        }
+
+        @Test
+        void summarizeCollection_inputContainsNoRanges(){
+            String expectedOutput = "1, 3, 5, 7, 9, 11, 13";
+            Collection<Integer> input =
+                    new ArrayList<>(Arrays.asList(1,3,5,7,9,11,13));
+            String actualOutput = numberSummarizer.summarizeCollection(input);
+
+            assertEquals(expectedOutput, actualOutput);
+        }
+
+        @Test
+        void summarizeCollection_inputContainsOneValue(){
+            Collection<Integer> input =
+                    new ArrayList<>(Arrays.asList(1));
+            String actualOutput = numberSummarizer.summarizeCollection(input);
+
+            assertEquals(1, actualOutput.length());
+            assertTrue(actualOutput.contains("1"));
+        }
+
+        @Test
+        void summarizeCollection_inputContainsNoValue(){
+            Collection<Integer> input =
+                    new ArrayList<>();
+            String actualOutput = numberSummarizer.summarizeCollection(input);
+
+            assertTrue(actualOutput.isEmpty());
+        }
+
+        @Test
+        void summarizeCollection_inputContainsSomeNegativeRanges(){
+            String expectedOutput = "-7--6, -4, -2-2, 5, 7";
+            Collection<Integer> input =
+                    new ArrayList<>(Arrays.asList(-7,-6,-4,-2,-1,0,1,2,5,7));
+            String actualOutput = numberSummarizer.summarizeCollection(input);
+
+            assertEquals(expectedOutput, actualOutput);
+        }
+
+        @Test
+        void summarizeCollection_inputContainsOnlyNegativeRanges(){
+            String expectedOutput = "-10--9, -7--6, -4--2, 0";
+            Collection<Integer> input =
+                    new ArrayList<>(Arrays.asList(-10,-9,-7,-6,-4,-3,-2,0));
+            String actualOutput = numberSummarizer.summarizeCollection(input);
+
+            assertEquals(expectedOutput, actualOutput);
+        }
+
+        @Test
+        void summarizeCollection_inputNotInOrder(){
+            String expectedOutput = "5, 4, 3, 2, 1, 0, -1, -2";
+            Collection<Integer> input =
+                    new ArrayList<>(Arrays.asList(5,4,3,2,1,0,-1,-2));
+            String actualOutput = numberSummarizer.summarizeCollection(input);
+
+            assertEquals(expectedOutput, actualOutput);
         }
     }
 
